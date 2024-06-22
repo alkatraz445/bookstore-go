@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="pl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Księgarnia</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+
+        h1 {
+            color: #333;
+        }
+
+        form {
+            margin-bottom: 20px;
+        }
+
+        label,
+        input {
+            display: block;
+            margin: 5px 0;
+        }
+
+        input[type="text"],
+        input[type="number"] {
+            width: 200px;
+        }
+
+        button {
+            margin-top: 10px;
+        }
+
+        .book {
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Księgarnia</h1>
+
+    <h2>Dodaj nową książkę</h2>
+    <form id="addBookForm">
+        <label for="title">Tytuł:</label>
+        <input type="text" id="title" name="title" required>
+        <label for="author">Autor:</label>
+        <input type="text" id="author" name="author" required>
+        <label for="price">Cena:</label>
+        <input type="number" id="price" name="price" required>
+        <label for="stock">Ilość:</label>
+        <input type="number" id="stock" name="stock" required>
+        <button type="submit">Dodaj</button>
+    </form>
+
+    <h2>Usuń książkę</h2>
+    <form id="deleteBookForm">
+        <label for="id">ID książki:</label>
+        <input type="number" id="id" name="id" required>
+        <button type="submit">Usuń</button>
+    </form>
+
+    <h2>Lista książek</h2>
+    <div id="books"></div>
+
+    <script>
+        async function fetchBooks() {
+            try {
+                const response = await fetch('http://localhost:8080/books', { method: 'GET', headers: { 'Content-Type': 'application/json' } });
+                const data = await response.json(); // Pobierz odpowiedź jako JSON
+                const books = data.data
+                console.log(books)
+                const booksContainer = document.getElementById('books');
+                booksContainer.innerHTML = ''; // Wyczyść poprzednią zawartość
+
+                books.forEach(book => {
+                    const bookElement = document.createElement('div');
+                    bookElement.className = 'book';
+                    bookElement.innerHTML = `
+                        <h3>${book.title}</h3>
+                        <p>ID: ${book.id}</p>
+                        <p>Autor: ${book.author}</p>
+                        <p>Cena: ${book.price} zł</p>
+                        <p>Ilość: ${book.stock}</p>
+                    `;
+                    booksContainer.appendChild(bookElement);
+                });
+            } catch (error) {
+                console.error('Error fetching books:', error);
+            }
+        }
+
+        document.getElementById('addBookForm').addEventListener('submit', async function (event) {
+            event.preventDefault();
+
+            const title = document.getElementById('title').value;
+            const author = document.getElementById('author').value;
+            const price = document.getElementById('price').value;
+            const stock = document.getElementById('stock').value;
+
+            const book = { title, author, price, stock };
+
+            try {
+                const response = await fetch('http://localhost:8080/books', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(book)
+                });
+
+                if (response.ok) {
+                    alert('Książka dodana pomyślnie!');
+                    fetchBooks(); // Odśwież listę książek
+                } else {
+                    alert('Błąd przy dodawaniu książki');
+                }
+            } catch (error) {
+                console.error('Error adding book:', error);
+            }
+        });
+
+        document.getElementById('deleteBookForm').addEventListener('submit', async function (event) {
+            event.preventDefault();
+
+            const id = document.getElementById('id').value;
+
+            try {
+                const response = await fetch(`http://localhost:8080/books/${id}`, {
+                    method: 'DELETE'
+                });
+
+                if (response.ok) {
+                    alert('Książka usunięta pomyślnie!');
+                    fetchBooks(); // Odśwież listę książek
+                } else {
+                    alert('Błąd przy usuwaniu książki');
+                }
+            } catch (error) {
+                console.error('Error deleting book:', error);
+            }
+        });
+
+        fetchBooks(); // Pobierz książki przy załadowaniu strony
+    </script>
+</body>
+
+</html>

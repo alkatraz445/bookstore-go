@@ -1,4 +1,4 @@
-name: ksiegi_emilki
+name: bookstore
 services:
   backend:
     build: ./backend
